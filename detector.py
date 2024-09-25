@@ -78,9 +78,14 @@ def CameraDetect():
         print("HEIGHT = ", cap_cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
         print("FPS = ", cap_cam.get(cv2.CAP_PROP_FPS))
 
+    prev_frame_time = 0
+    new_frame_time = 0
+
     while True:
         ret, frame = cap_cam.read()
         if ret:
+            new_frame_time = cv2.getTickCount()
+
             arr = detector1.detect(frame)
 
             for i in range(len(arr[0])):
@@ -89,6 +94,14 @@ def CameraDetect():
                 cv2.rectangle(arr[0][i], (1, 1), (arr[0][i].shape[1] - 1, arr[0][i].shape[0] - 1),
                               COLORS[int(arr[1][i])], 3)
                 cv2.putText(arr[0][i], OBJECTS[int(arr[1][i])], (10, 30), 3, 1, COLORS[int(arr[1][i])], 1, cv2.LINE_AA)
+
+            # Calculate FPS
+            fps = cv2.getTickFrequency() / (new_frame_time - prev_frame_time)
+            prev_frame_time = new_frame_time
+
+            # Display FPS on the frame with floating point (e.g., 29.97)
+            cv2.putText(frame, f"FPS: {fps:.2f}", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2,
+                        cv2.LINE_AA)
 
             cv2.imshow('Camera Feed', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -141,12 +154,4 @@ def VideoDetect(path: str):
     video_writer.release()
     cv2.destroyAllWindows()
 
-
-# Uncomment the lines below if you want to run video detection on files from 'res' directory.
-# videos = os.listdir('res')
-# for vid in videos:
-#     VideoDetect('res/' + vid)
-#     print(vid + " is ready")
-
-# Start camera detection
 CameraDetect()
